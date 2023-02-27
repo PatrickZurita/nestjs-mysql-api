@@ -1,26 +1,36 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToOne, JoinColumn } from 'typeorm'
-import { Profile } from './profile.entity'
+import { Post } from "src/posts/post.entity";
+import { Profile } from "./profile.entity";
 
-@Entity({ name: 'users' })
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  OneToOne,
+  JoinColumn,
+  OneToMany,
+} from "typeorm";
+
+@Entity({ name: "users" })
 export class User {
-
   @PrimaryGeneratedColumn()
-  id: number
+  id: number;
 
   @Column({ unique: true })
-  username: string
+  username: string;
 
   @Column()
-  password: string
+  password: string;
 
-  @Column({ type: 'datetime', default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date
+  @Column({ type: "datetime", default: () => "CURRENT_TIMESTAMP" })
+  createdAt: Date;
 
   @Column({ nullable: true })
-  authStrategy: string
+  authStrategy: string;
 
   @OneToOne(() => Profile)
   @JoinColumn()
-  profile: Profile
+  profile: Profile;
 
+  @OneToMany(() => Post, (post) => post.author)
+  posts: Post[];
 }

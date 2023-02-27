@@ -1,43 +1,46 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { User } from './user.entity';
-import { Repository } from 'typeorm';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
-import { CreateProfileDto } from './dto/create-profile.dto';
-import { Profile } from './profile.entity';
+import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { User } from "./user.entity";
+import { Repository } from "typeorm";
+import { CreateUserDto } from "./dto/create-user.dto";
+import { UpdateUserDto } from "./dto/update-user.dto";
+import { CreateProfileDto } from "./dto/create-profile.dto";
+import { Profile } from "./profile.entity";
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Profile) private profileRepository: Repository<Profile>
-  ) { }
+  ) {}
 
   async createUser(user: CreateUserDto) {
     const userFound = await this.getUserByUsername(user.username);
 
     if (userFound) {
-      return new HttpException('User already exists', HttpStatus.CONFLICT);
+      return new HttpException("User already exists", HttpStatus.CONFLICT);
     }
 
-    const newUser = this.userRepository.create(user)
+    const newUser = this.userRepository.create(user);
     return this.userRepository.save(newUser);
   }
 
   getUsers() {
-    return this.userRepository.find();
+    return this.userRepository.find({
+      relations: ["posts"],
+    });
   }
 
   async getUserById(id: number) {
     const userFound = await this.userRepository.findOne({
       where: {
-        id
-      }
-    })
+        id,
+      },
+      relations: ["posts"],
+    });
 
     if (!userFound) {
-      return new HttpException('User does not exist', HttpStatus.NOT_FOUND);
+      return new HttpException("User does not exist", HttpStatus.NOT_FOUND);
     }
 
     return userFound;
@@ -46,12 +49,12 @@ export class UsersService {
   async getUserByUsername(username: string) {
     const userFound = await this.userRepository.findOne({
       where: {
-        username
-      }
-    })
+        username,
+      },
+    });
 
     if (!userFound) {
-      return new HttpException('User does not exist', HttpStatus.NOT_FOUND);
+      return new HttpException("User does not exist", HttpStatus.NOT_FOUND);
     }
 
     return userFound;
@@ -60,12 +63,12 @@ export class UsersService {
   async deleteUser(id: number) {
     const userFound = await this.userRepository.findOne({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
 
     if (!userFound) {
-      return new HttpException('User not found', HttpStatus.NOT_FOUND);
+      return new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
 
     return this.userRepository.delete({ id });
@@ -75,7 +78,7 @@ export class UsersService {
     const result = await this.userRepository.delete({ id });
 
     if (result.affected === 0) {
-      return new HttpException('User not found', HttpStatus.NOT_FOUND);
+      return new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
 
     return result;
@@ -84,15 +87,15 @@ export class UsersService {
   async updateUser(id: number, user: UpdateUserDto) {
     const userFound = await this.userRepository.findOne({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
 
     if (!userFound) {
-      return new HttpException('User not found', HttpStatus.NOT_FOUND);
+      return new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
 
-    const updateUser = Object.assign(userFound, user)
+    const updateUser = Object.assign(userFound, user);
 
     return this.userRepository.save(updateUser);
   }
@@ -100,20 +103,20 @@ export class UsersService {
   async createProfile(id: number, profile: CreateProfileDto) {
     const userFound = await this.userRepository.findOne({
       where: {
-        id
-      }
-    })
+        id,
+      },
+    });
 
     if (!userFound) {
-      return new HttpException('User not found', HttpStatus.NOT_FOUND);
+      return new HttpException("User not found", HttpStatus.NOT_FOUND);
     }
 
-    const newProfile = this.profileRepository.create(profile)
+    const newProfile = this.profileRepository.create(profile);
 
-    const savedProfile = await this.profileRepository.save(newProfile)
+    const savedProfile = await this.profileRepository.save(newProfile);
 
-    userFound.profile = savedProfile
+    userFound.profile = savedProfile;
 
-    return this.userRepository.save(userFound)
+    return this.userRepository.save(userFound);
   }
 }
